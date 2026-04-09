@@ -77,3 +77,12 @@ def test_lint_invalid_line_format(manager, env_file):
     errors = [i for i in result.issues if i.severity == "error"]
     assert any("Invalid line format" in i.message for i in errors)
     assert result.has_errors
+
+
+def test_lint_issue_includes_line_number(manager, env_file):
+    """Each reported issue should reference the correct line number."""
+    path = env_file("VALID=ok\nBADLINE\n")
+    result = manager.lint(path)
+    errors = [i for i in result.issues if i.severity == "error"]
+    assert errors, "Expected at least one error for the invalid line"
+    assert errors[0].line == 2
