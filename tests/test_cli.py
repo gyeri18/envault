@@ -60,3 +60,10 @@ def test_lock_nonexistent_file(runner, tmp_path):
     runner.invoke(cli, ["init", "testproject"])
     result = runner.invoke(cli, ["lock", "testproject", str(tmp_path / "missing.env")])
     assert result.exit_code != 0
+
+
+def test_unlock_nonexistent_vault(runner, tmp_path):
+    """Unlocking a missing vault file should fail with a non-zero exit code."""
+    runner.invoke(cli, ["init", "testproject"])
+    result = runner.invoke(cli, ["unlock", "testproject", str(tmp_path / "missing.env.vault")])
+    assert result.exit_code != 0
