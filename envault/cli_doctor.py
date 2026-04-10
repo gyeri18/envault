@@ -16,7 +16,12 @@ def doctor_group():
 def check_cmd(project: str, env_file: str, config_dir: str | None):
     """Run health checks for PROJECT."""
     manager = DoctorManager(config_dir=config_dir)
-    report = manager.check(project, env_file=env_file)
+
+    try:
+        report = manager.check(project, env_file=env_file)
+    except FileNotFoundError as exc:
+        click.secho(f"Error: {exc}", fg="red", err=True)
+        raise SystemExit(2)
 
     for issue in report.issues:
         if issue.level == "error":
@@ -25,6 +30,9 @@ def check_cmd(project: str, env_file: str, config_dir: str | None):
             click.secho(str(issue), fg="yellow")
         else:
             click.secho(str(issue), fg="cyan")
+
+    if not report.issues:
+        click.secho("No issues found.", fg="green")
 
     if report.has_errors:
         raise SystemExit(2)
