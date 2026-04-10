@@ -98,3 +98,11 @@ def test_diff_raises_when_vault_unlock_fails(tmp_path: Path) -> None:
     dm = DiffManager(vault=vault)
     with pytest.raises(EnvaultError, match="Cannot unlock vault for diff"):
         dm.diff("myproject", str(env_file))
+
+
+def test_diff_returns_all_keys(manager: DiffManager, env_file: Path) -> None:
+    """Ensure every key from both vault and env file appears in the diff result."""
+    entries = manager.diff("myproject", str(env_file))
+    keys = {e.key for e in entries}
+    expected_keys = {"DB_HOST", "DB_PORT", "SECRET_KEY", "OLD_VAR", "NEW_VAR"}
+    assert keys == expected_keys
