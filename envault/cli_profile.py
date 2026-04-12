@@ -26,7 +26,7 @@ def lock_cmd(project: str, env_file: str, profile: str,
     try:
         mgr = ProfileManager(project_name=project, config_dir=config_dir)
         vault_path = mgr.lock_profile(env_file=env_file, profile=profile, password=password)
-        click.echo(f"Locked profile '{profile}' → {vault_path}")
+        click.echo(f"Locked profile '{profile}' \u2192 {vault_path}")
     except EnvaultError as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -44,7 +44,7 @@ def unlock_cmd(project: str, profile: str, output: str,
     try:
         mgr = ProfileManager(project_name=project, config_dir=config_dir)
         dest = mgr.unlock_profile(profile=profile, output_path=output, password=password)
-        click.echo(f"Unlocked profile '{profile}' → {dest}")
+        click.echo(f"Unlocked profile '{profile}' \u2192 {dest}")
     except EnvaultError as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -69,12 +69,19 @@ def list_cmd(project: str, config_dir: str) -> None:
 @profile_group.command(name="delete")
 @click.argument("project")
 @click.argument("profile")
+@click.option("--yes", "-y", is_flag=True, default=False,
+              help="Skip confirmation prompt.")
 @click.option("--config-dir", default=None, hidden=True)
-def delete_cmd(project: str, profile: str, config_dir: str) -> None:
+def delete_cmd(project: str, profile: str, yes: bool, config_dir: str) -> None:
     """Delete a named profile vault."""
+    if not yes:
+        click.confirm(
+            f"Are you sure you want to delete profile '{profile}' for project '{project}'?",
+            abort=True,
+        )
     try:
         mgr = ProfileManager(project_name=project, config_dir=config_dir)
-        mgr.delete_profile(profile)
-        click.echo(f"Deleted profile '{profile}' from project '{project}'.")
+        mgr.delete_profile(profile=profile)
+        click.echo(f"Deleted profile '{profile}' for project '{project}'.")
     except EnvaultError as exc:
         raise click.ClickException(str(exc)) from exc
