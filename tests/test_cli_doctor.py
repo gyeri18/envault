@@ -56,3 +56,15 @@ def test_check_command_ok_exit_code(runner, tmp_path, config_dir):
         )
         assert result.exit_code == 0
         assert "INFO" in result.output
+
+
+def test_check_command_includes_project_name_in_output(runner, tmp_path, config_dir):
+    """Output should mention the project name being checked."""
+    storage = StorageManager(config_dir=config_dir)
+    storage.save_project_key("myapp", b"k" * 32)
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(
+            doctor_group,
+            ["check", "myapp", "--config-dir", config_dir],
+        )
+        assert "myapp" in result.output
