@@ -1,112 +1,131 @@
 """Custom exception hierarchy for envault."""
 from __future__ import annotations
 
-from typing import Optional
-
 
 class EnvaultError(Exception):
     """Base exception for all envault errors."""
 
-    def __init__(self, message: str, *, hint: Optional[str] = None) -> None:
+    def __init__(self, message: str, hint: str | None = None) -> None:
         super().__init__(message)
         self.hint = hint
 
+    def __str__(self) -> str:
+        base = super().__str__()
+        if self.hint:
+            return f"{base} (hint: {self.hint})"
+        return base
 
-# ── Crypto ────────────────────────────────────────────────────────────
+
+# ---------------------------------------------------------------------------
+# Crypto
+# ---------------------------------------------------------------------------
 
 class CryptoError(EnvaultError):
-    """Generic cryptographic failure."""
+    """Generic cryptographic error."""
 
 
 class DecryptionError(CryptoError):
-    """Raised when decryption fails (wrong key, corrupted data, …)."""
+    """Raised when decryption fails (wrong key, corrupted data, etc.)."""
 
-    def __init__(self, message: str = "Decryption failed — wrong key or corrupted data.") -> None:
-        super().__init__(message)
+    def __init__(self, message: str = "Decryption failed", hint: str | None = None) -> None:
+        super().__init__(message, hint)
 
 
-# ── Storage ───────────────────────────────────────────────────────────
+class EncryptionError(CryptoError):
+    """Raised when encryption fails."""
+
+
+# ---------------------------------------------------------------------------
+# Storage
+# ---------------------------------------------------------------------------
 
 class StorageError(EnvaultError):
-    """Raised for config-directory / persistence failures."""
+    """Generic storage error."""
 
 
 class ProjectKeyNotFoundError(StorageError):
-    """Raised when no key exists for the requested project."""
-
-    def __init__(self, project: str) -> None:
-        super().__init__(f"No key found for project {project!r}.")
-        self.project = project
+    """Raised when a project key cannot be located."""
 
 
-# ── Vault ─────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Vault
+# ---------------------------------------------------------------------------
 
 class VaultError(EnvaultError):
-    """Generic vault operation failure."""
+    """Generic vault error."""
 
 
 class VaultNotFoundError(VaultError):
-    """Raised when the .vault file does not exist."""
-
-    def __init__(self, path: str) -> None:
-        super().__init__(f"Vault file not found: {path}")
-        self.path = path
+    """Raised when the vault file does not exist."""
 
 
 class VaultAlreadyLockedError(VaultError):
-    """Raised when trying to lock an already-locked vault."""
+    """Raised when attempting to lock an already-locked vault."""
 
 
-# ── Snapshot ──────────────────────────────────────────────────────────
-
-class SnapshotError(EnvaultError):
-    """Generic snapshot failure."""
+class VaultNotLockedError(VaultError):
+    """Raised when attempting to unlock a vault that is not locked."""
 
 
-class SnapshotAlreadyExistsError(SnapshotError):
-    """Raised when a snapshot with the given label already exists."""
-
-    def __init__(self, label: str) -> None:
-        super().__init__(f"Snapshot {label!r} already exists.")
-        self.label = label
-
-
-class SnapshotNotFoundError(SnapshotError):
-    """Raised when the requested snapshot label cannot be found."""
-
-    def __init__(self, label: str) -> None:
-        super().__init__(f"Snapshot {label!r} not found.")
-        self.label = label
-
-
-# ── Rotation ──────────────────────────────────────────────────────────
-
-class RotationError(EnvaultError):
-    """Raised when key rotation fails."""
-
-
-# ── Import / Export ───────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Import / Export
+# ---------------------------------------------------------------------------
 
 class ImportError(EnvaultError):  # noqa: A001
-    """Raised when importing an env file fails."""
+    """Raised when an import operation fails."""
 
 
 class ExportError(EnvaultError):
-    """Raised when exporting fails."""
+    """Raised when an export operation fails."""
 
 
-# ── Merge ─────────────────────────────────────────────────────────────
-
-class MergeError(EnvaultError):
-    """Raised for unresolvable merge conflicts."""
+class UnsupportedFormatError(EnvaultError):
+    """Raised when an unsupported file format is requested."""
 
 
-# ── Validation ────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Key operations
+# ---------------------------------------------------------------------------
 
-class ValidationSchemaError(EnvaultError):
-    """Raised when a .envschema file cannot be parsed."""
+class KeyRotationError(EnvaultError):
+    """Raised when key rotation fails."""
 
-    def __init__(self, path: str, reason: str) -> None:
-        super().__init__(f"Schema error in {path!r}: {reason}")
-        self.path = path
-        self.reason = reason
+
+class DuplicateKeyError(EnvaultError):
+    """Raised when a duplicate key is encountered where one is not allowed."""
+
+
+class MissingKeyError(EnvaultError):
+    """Raised when a required key is absent."""
+
+
+# ---------------------------------------------------------------------------
+# Mask
+# ---------------------------------------------------------------------------
+
+class MaskError(EnvaultError):
+    """Raised when a masking operation fails."""
+
+
+# ---------------------------------------------------------------------------
+# Validation / Schema
+# ---------------------------------------------------------------------------
+
+class ValidationError(EnvaultError):
+    """Raised when env validation fails."""
+
+
+class SchemaError(EnvaultError):
+    """Raised when a schema file is malformed or missing."""
+
+
+# ---------------------------------------------------------------------------
+# Profile / Scope
+# ---------------------------------------------------------------------------
+
+class ProfileError(EnvaultError):
+    """Raised on profile-related failures."""
+
+
+class ScopeError(EnvaultError):
+    """Raised on scope-related failures."""
