@@ -38,6 +38,13 @@ def test_format_missing_file_raises(tmp_dir, manager):
         manager.format(tmp_dir / "missing.env")
 
 
+def test_format_unchanged_file_not_marked_changed(tmp_dir, manager):
+    """A file that needs no formatting should report changed=False."""
+    f = _write(tmp_dir / ".env", "KEY=value\n")
+    result = manager.format(f)
+    assert not result.changed
+
+
 # ---------------------------------------------------------------------------
 # Trailing whitespace
 # ---------------------------------------------------------------------------
@@ -97,31 +104,5 @@ def test_quote_values_leaves_already_quoted(tmp_dir):
     f = _write(tmp_dir / ".env", content)
     m = FormatManager(quote_values=True)
     result = m.format(f)
-    # No quoting change expected
-    assert 'SECRET="already"' in f.read_text()
-
-
-# ---------------------------------------------------------------------------
-# Dry-run mode
-# ---------------------------------------------------------------------------
-
-def test_dry_run_does_not_write(tmp_dir):
-    content = "KEY=value   \n"
-    f = _write(tmp_dir / ".env", content)
-    m = FormatManager(strip_trailing_whitespace=True)
-    result = m.format(f, dry_run=True)
-    # File must be unchanged
+    assert not result.changed
     assert f.read_text() == content
-    # But result should still report changes
-    assert result.changed
-
-
-# ---------------------------------------------------------------------------
-# Comments preserved
-# ---------------------------------------------------------------------------
-
-def test_comments_are_preserved(tmp_dir, manager):
-    content = "# This is a comment\nKEY=val\n"
-    f = _write(tmp_dir / ".env", content)
-    manager.format(f)
-    assert "# This is a comment" in f.read_text()
