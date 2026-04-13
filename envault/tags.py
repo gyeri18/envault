@@ -64,3 +64,20 @@ class TagManager:
     def list_all(self) -> Dict[str, List[str]]:
         """Return the full project->tags mapping."""
         return dict(self._load())
+
+    def rename_tag(self, project: str, old_tag: str, new_tag: str) -> None:
+        """Rename a tag for a project.
+
+        Raises EnvaultError if the old tag does not exist, if the new tag name
+        is empty, or if the new tag already exists on the project.
+        """
+        if not new_tag:
+            raise EnvaultError("New tag name must be a non-empty string.")
+        data = self._load()
+        tags = data.get(project, [])
+        if old_tag not in tags:
+            raise EnvaultError(f"Tag '{old_tag}' not found for project '{project}'.")
+        if new_tag in tags:
+            raise EnvaultError(f"Tag '{new_tag}' already exists for project '{project}'.")
+        tags[tags.index(old_tag)] = new_tag
+        self._save(data)
