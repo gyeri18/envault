@@ -63,3 +63,12 @@ def test_run_error_exits_1(runner, tmp):
         result = runner.invoke(promote_group, ["run", str(src), str(dst)])
     assert result.exit_code == 1
     assert "Error: boom" in result.output
+
+
+def test_run_missing_source_exits_nonzero(runner, tmp_path: Path):
+    """Invoking run with a non-existent source file should exit with a non-zero code."""
+    src = tmp_path / ".env.missing"
+    dst = tmp_path / ".env.prod"
+    dst.write_text("EXISTING=1\n")
+    result = runner.invoke(promote_group, ["run", str(src), str(dst)])
+    assert result.exit_code != 0
