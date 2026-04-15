@@ -14,7 +14,7 @@ def chain_group() -> None:
 
 
 @chain_group.command("merge")
-@click.argument("files", nargs=-1, required=True, type=click.Path())
+@click.argument("files", nargs=-1, required=True, type=click.Path(exists=True))
 @click.option("-o", "--output", default=None, help="Write merged result to file.")
 @click.option("--show-sources", is_flag=True, default=False, help="Show which file each key came from.")
 def merge_cmd(files: tuple, output: str | None, show_sources: bool) -> None:
